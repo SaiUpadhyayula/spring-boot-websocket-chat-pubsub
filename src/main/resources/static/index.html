@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+    <title>Spring Boot WebSocket Chat Application</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+</head>
+<body>
+<div id="username-page" class="container">
+    <div class="row">
+        <div class="col-md-4 offset-md-4">
+            <form id="usernameForm" name="usernameForm">
+                <div class="form-group">
+                    <input type="text" id="name" placeholder="Username" autocomplete="off" class="form-control" />
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block">Start Chatting</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div id="chat-page" class="container d-none">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <h2 class="text-center">Spring Boot WebSocket Chat Application</h2>
+            <div id="chat" class="border rounded p-3" style="height: 300px; overflow-y: scroll;"></div>
+            <form id="messageForm" name="messageForm" class="mt-3">
+                <div class="form-group">
+                    <div class="input-group">
+                        <input type="text" id="message" placeholder="Type a message..." autocomplete="off" class="form-control"/>
+                        <div class="input-group-append">
+                            <button class="btn btn-primary" type="submit">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    var stompClient = null;
+    var username = null;
+
+    function connect(event) {
+        username = $("#name").val().trim();
+
+        if (username) {
+            var socket = new SockJS('/chat-app');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, onConnected, onError);
+        }
+        event.preventDefault();
+    }
+
+    function onConnected() {
+        // Subscribe to the Public Topic
+        stompClient.subscribe('/topic/public', onMessageReceived);
+
+        // Tell your username to the server
+        stompClient.send("/app/chat.addUser",
+            {},
+            JSON.stringify({userName: username, messageType: 'JOIN'})
+        )
+
+        $("#username-page").addClass('d-none');
+        $("#chat-page").removeClass('d-none');
+    }
+
+    function onError(error) {
+        console.log('Could not connect to WebSocket server. Please refresh this page to try again!');
+    }
+
+    function sendMessage(event) {
+        var messageContent = $("#message").val().trim();
+        if(messageContent && stompClient) {
+            var chatMessage = {
+                userName: username,
+                message: messageContent,
+                messageType: 'CHAT'
+            };
+            stompClient.send("/app/chat.sendChatMessage", {}, JSON.stringify(chatMessage));
+            $("#message").val('');
+        }
+        event.preventDefault();
+    }
+
+    function onMessageReceived(payload) {
+        var message = JSON.parse(payload.body);
+        var messageElement = $('<div>');
+
+        if(message.messageType === 'JOIN') {
+            messageElement.addClass('text-center text-muted small');
+            messageElement.text(message.message);
+        } else if (message.messageType === 'LEAVE') {
+            messageElement.addClass('text-center text-muted small');
+            messageElement.text(message.message);
+        } else {
+            messageElement.append('<strong>' + message.userName + ': </strong>');
+            messageElement.append(message.message);
+        }
+
+        $("#chat").append(messageElement);
+        $("#chat").scrollTop($("#chat")[0].scrollHeight);
+    }
+
+    $(document).ready(function() {
+        $("#usernameForm").on('submit', connect);
+        $("#messageForm").on('submit', sendMessage);
+    });
+</script>
+</body>
+</html>
