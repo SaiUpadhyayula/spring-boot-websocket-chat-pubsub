@@ -1,11 +1,11 @@
-# Spring Boot Real Time Chat Application using Websocket and Dragonfly DB
+# Spring Boot Real Time Chat Application using Websocket and DragonflyDB
 
-This project contains source code to implement a Real Time Chat application using Spring Boot Websockets and Dragonfly DB for Pub/Sub Architecture.
+This project contains source code to implement a Real Time Chat application using Spring Boot Websockets and [DragonflyDB](https://www.dragonflydb.io/) for Pub/Sub Architecture.
 
 ## Tech Stack
 
 - Spring Boot with Websockets
-- Dragonfly DB for Pub/Sub Pattern
+- DragonflyDB for Pub/Sub Pattern
 
 ## Application Architecture
 
