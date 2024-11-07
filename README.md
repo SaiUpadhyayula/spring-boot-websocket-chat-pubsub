@@ -9,7 +9,7 @@ This project contains source code to implement a Real Time Chat application usin
 
 ## Application Architecture
 
-![img.png](images/img.png)
+![img.png](img.png)
 
 ## Running Application
 
